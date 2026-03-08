@@ -1,0 +1,92 @@
+=====================================================
+  SISTEMA DE GESTIÓN DE EMPLEADOS
+  Actividad 3 — Código Malo (Code Smells)
+  Estructura del Proyecto ANTES de Refactorizar
+=====================================================
+
+gestion_empleados_malo/
+│
+├── index.html                        ← Toda la interfaz en un solo archivo
+│                                        (navbar, formularios, tablas, modales)
+│
+└── codigo_malo.js                    ← TODA la lógica en un solo archivo plano
+                                         (sin clases, sin módulos, sin separación)
+                                         Contiene mezclado:
+                                         - Variables globales de estado
+                                         - Lógica de navegación
+                                         - Cálculo de salarios (x3 duplicado)
+                                         - Validaciones (x4 copia-pegadas)
+                                         - Generación de reportes
+                                         - Construcción de HTML como strings
+                                         - Render de tablas
+
+
+=====================================================
+  PROBLEMAS DE ARQUITECTURA
+=====================================================
+
+  ✗  Sin carpetas ni separación de capas
+  ✗  Sin clases ni orientación a objetos
+  ✗  Sin capa de datos / API / backend
+  ✗  Sin base de datos (solo memoria del navegador)
+  ✗  Todo en 2 archivos: index.html + codigo_malo.js
+
+=====================================================
+  CONTENIDO DE codigo_malo.js (código mezclado)
+=====================================================
+
+  codigo_malo.js
+  │
+  ├── [líneas 5–8]    Variables globales
+  │                   var empleados = [];
+  │                   var vacaciones = [];
+  │                   var contadorId = 1;
+  │                   var contadorVacId = 1;
+  │
+  ├── [líneas 12–26]  Navegación (mostrarSeccion)
+  │
+  ├── [líneas 29–80]  ❌ PROBLEMA 1 — Cálculo duplicado
+  │                   calcularSalarioTiempoCompleto()
+  │                   calcularSalarioMedioTiempo()
+  │                   calcularSalarioContratista()
+  │                   calcularSalario() ← if/else gigante
+  │
+  ├── [líneas 85–150] ❌ PROBLEMA 2 — Validaciones copia-pegadas
+  │                   registrarEmpleado()  ← validación #1
+  │                   eliminarEmpleado()   ← validación #2
+  │
+  ├── [líneas 155–215] ❌ PROBLEMA 2 (cont.)
+  │                   solicitarVacaciones() ← validación #3
+  │                   cambiarEstadoVacacion()
+  │
+  ├── [líneas 220–315] ❌ PROBLEMA 3 — Función gigante (80+ líneas)
+  │                   generarReporte()
+  │                   Mezcla: validación #4 + conteos +
+  │                           sumas + promedios + max/min +
+  │                           fechas + construcción de HTML
+  │
+  └── [líneas 320–420] Helpers de render (UI acoplada a datos)
+                      renderTablaEmpleados()
+                      renderTablaVacaciones()
+                      actualizarSelectEmpleados()
+                      calcularDias()
+                      mostrarAlerta()
+
+
+=====================================================
+  COMPARATIVA DE ESTRUCTURA
+=====================================================
+
+  CÓDIGO MALO (ahora)       CÓDIGO CON PATRONES (después)
+  ─────────────────         ──────────────────────────────
+  2 archivos                20 archivos
+  0 clases                  6 clases de patrones (PHP)
+  0 carpetas                7 carpetas organizadas
+  0 backend                 api/ + conexion/ + metodos/
+  0 base de datos           sql/ + MySQL
+  Variables globales        Singleton encapsulado
+  Lógica duplicada          Strategy por tipo
+  Validaciones x4           Centralizadas por clase
+  HTML en strings           Observer desacoplado
+
+=====================================================

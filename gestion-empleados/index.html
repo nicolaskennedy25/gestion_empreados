@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Empleados</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161b24;
+      --surface2: #1e2633;
+      --border: #2a3547;
+      --accent: #00e5ff;
+      --accent2: #ff3d71;
+      --text: #cdd6f4;
+      --muted: #6b7a99;
+      --success: #00e096;
+      --warning: #ffaa00;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ---- NAVBAR ---- */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--accent);
+      font-size: 1rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .nav-brand span { color: var(--accent2); }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 2px;
+    }
+    .nav-links li a {
+      display: block;
+      padding: .4rem 1rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      cursor: pointer;
+    }
+    .nav-links li a:hover,
+    .nav-links li a.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ---- LAYOUT ---- */
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .seccion { display: none; }
+    .seccion.activa { display: block; }
+
+    /* ---- HERO ---- */
+    .hero {
+      text-align: center;
+      padding: 4rem 1rem 3rem;
+    }
+    .hero-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+      color: var(--accent);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 500px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.5rem 1rem;
+      cursor: pointer;
+      transition: border-color .15s, transform .15s;
+      text-align: center;
+    }
+    .hero-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .hero-card .icon { font-size: 2rem; margin-bottom: .6rem; display: block; }
+    .hero-card h3 { font-size: .9rem; font-weight: 700; color: #fff; margin-bottom: .25rem; }
+    .hero-card p  { font-size: .78rem; color: var(--muted); }
+
+    /* ---- PAGE HEADER ---- */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .page-header h2 span {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--accent);
+      font-size: .85rem;
+      display: block;
+      font-weight: 400;
+      margin-bottom: .15rem;
+      letter-spacing: 2px;
+    }
+
+    /* ---- CARD ---- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h3 {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .8rem;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ---- FORMS ---- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .4rem; }
+    .form-group label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .form-group input,
+    .form-group select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: .6rem .75rem;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: .9rem;
+      transition: border-color .15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .form-group select option { background: var(--surface2); }
+    .form-actions { margin-top: 1.25rem; display: flex; gap: .75rem; }
+
+    /* ---- BUTTONS ---- */
+    .btn {
+      padding: .55rem 1.25rem;
+      border: none;
+      border-radius: 3px;
+      font-family: 'Barlow', sans-serif;
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary  { background: var(--accent); color: #000; }
+    .btn-danger   { background: var(--accent2); color: #fff; }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-sm       { padding: .3rem .7rem; font-size: .78rem; }
+
+    /* ---- TABLE ---- */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+    thead tr {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--accent);
+    }
+    th {
+      padding: .65rem 1rem;
+      text-align: left;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .75rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+    td {
+      padding: .65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    tbody tr:hover { background: var(--surface2); }
+    .empty-row { text-align: center; color: var(--muted); padding: 2rem !important; }
+
+    /* ---- BADGES ---- */
+    .badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 2px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .badge-tc  { background: rgba(0,229,255,.15); color: var(--accent); border: 1px solid rgba(0,229,255,.3); }
+    .badge-mt  { background: rgba(255,170,0,.15);  color: var(--warning); border: 1px solid rgba(255,170,0,.3); }
+    .badge-co  { background: rgba(255,61,113,.15); color: var(--accent2); border: 1px solid rgba(255,61,113,.3); }
+
+    /* ---- ALERTAS ---- */
+    .alerta {
+      padding: .75rem 1rem;
+      border-radius: 3px;
+      margin-bottom: 1rem;
+      font-size: .88rem;
+      font-weight: 600;
+      display: none;
+    }
+    .alerta.visible { display: block; }
+    .alerta-ok    { background: rgba(0,224,150,.1); color: var(--success); border-left: 3px solid var(--success); }
+    .alerta-error { background: rgba(255,61,113,.1); color: var(--accent2); border-left: 3px solid var(--accent2); }
+
+    /* ---- REPORTE ---- */
+    .reporte-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-box .val {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.4rem;
+      color: var(--accent);
+      display: block;
+      margin-bottom: .25rem;
+    }
+    .stat-box .lbl {
+      font-size: .75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    @media (max-width: 640px) {
+      .navbar { padding: 0 1rem; }
+      .nav-links li a { padding: .4rem .6rem; font-size: .75rem; }
+      .hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand">EMP<span>_</span>SYS</div>
+  <ul class="nav-links">
+    <li><a onclick="mostrarSeccion('inicio')" class="active" id="nav-inicio">Inicio</a></li>
+    <li><a onclick="mostrarSeccion('empleados')" id="nav-empleados">Empleados</a></li>
+    <li><a onclick="mostrarSeccion('registrar')" id="nav-registrar">Registrar</a></li>
+    <li><a onclick="mostrarSeccion('reportes')" id="nav-reportes">Reportes</a></li>
+    <li><a onclick="mostrarSeccion('vacaciones')" id="nav-vacaciones">Vacaciones</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+  <!-- ======== INICIO ======== -->
+  <div id="sec-inicio" class="seccion activa">
+    <div class="hero">
+      <p class="hero-tag">// sistema activo v1.0</p>
+      <h1>Gestión de <em>Empleados</em></h1>
+      <p>Administra tu equipo, calcula nómina y gestiona vacaciones desde un solo lugar.</p>
+      <div class="hero-cards">
+        <div class="hero-card" onclick="mostrarSeccion('empleados')">
+          <span class="icon">👥</span>
+          <h3>Empleados</h3>
+          <p>Ver lista completa</p>
+        </div>
+        <div class="hero-card" onclick="mostrarSeccion('registrar')">
+          <span class="icon">➕</span>
+          <h3>Registrar</h3>
+          <p>Agregar empleado</p>
+        </div>
+        <div class="hero-card" onclick="mostrarSeccion('reportes')">
+          <span class="icon">📊</span>
+          <h3>Reportes</h3>
+          <p>Nómina y estadísticas</p>
+        </div>
+        <div class="hero-card" onclick="mostrarSeccion('vacaciones')">
+          <span class="icon">🏖️</span>
+          <h3>Vacaciones</h3>
+          <p>Gestionar solicitudes</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== EMPLEADOS ======== -->
+  <div id="sec-empleados" class="seccion">
+    <div class="page-header">
+      <h2><span>// módulo</span>Lista de Empleados</h2>
+      <button class="btn btn-primary" onclick="mostrarSeccion('registrar')">+ Nuevo</button>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Nombre</th><th>Cargo</th><th>Tipo</th>
+              <th>Salario Base</th><th>Salario Calculado</th><th>Fecha</th><th>Acc.</th>
+            </tr>
+          </thead>
+          <tbody id="bodyEmpleados">
+            <tr><td class="empty-row" colspan="8">No hay empleados registrados</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== REGISTRAR ======== -->
+  <div id="sec-registrar" class="seccion">
+    <div class="page-header">
+      <h2><span>// módulo</span>Registrar Empleado</h2>
+    </div>
+    <div id="alerta-reg" class="alerta"></div>
+    <div class="card">
+      <h3>// datos del empleado</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="reg-nombre" placeholder="Juan">
+        </div>
+        <div class="form-group">
+          <label>Apellido *</label>
+          <input type="text" id="reg-apellido" placeholder="Pérez">
+        </div>
+        <div class="form-group">
+          <label>Cargo *</label>
+          <input type="text" id="reg-cargo" placeholder="Desarrollador">
+        </div>
+        <div class="form-group">
+          <label>Tipo *</label>
+          <select id="reg-tipo">
+            <option value="">-- Seleccionar --</option>
+            <option value="tiempo_completo">Tiempo Completo</option>
+            <option value="medio_tiempo">Medio Tiempo</option>
+            <option value="contratista">Contratista</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Salario Base *</label>
+          <input type="number" id="reg-salario" placeholder="3500000" min="0">
+        </div>
+        <div class="form-group">
+          <label>Fecha Ingreso *</label>
+          <input type="date" id="reg-fecha">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="registrarEmpleado()">Registrar</button>
+        <button class="btn btn-ghost" onclick="mostrarSeccion('empleados')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== REPORTES ======== -->
+  <div id="sec-reportes" class="seccion">
+    <div class="page-header">
+      <h2><span>// módulo</span>Reportes de Nómina</h2>
+      <button class="btn btn-primary" onclick="generarReporte()">Generar Reporte</button>
+    </div>
+    <div id="contenido-reporte">
+      <div class="card" style="text-align:center; color:var(--muted); padding:3rem">
+        Presiona "Generar Reporte" para ver las estadísticas
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== VACACIONES ======== -->
+  <div id="sec-vacaciones" class="seccion">
+    <div class="page-header">
+      <h2><span>// módulo</span>Gestión de Vacaciones</h2>
+    </div>
+    <div id="alerta-vac" class="alerta"></div>
+    <div class="card">
+      <h3>// solicitar vacaciones</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Empleado *</label>
+          <select id="vac-empleado">
+            <option value="">-- Seleccionar --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fecha Inicio *</label>
+          <input type="date" id="vac-inicio" onchange="calcularDias()">
+        </div>
+        <div class="form-group">
+          <label>Fecha Fin *</label>
+          <input type="date" id="vac-fin" onchange="calcularDias()">
+        </div>
+        <div class="form-group">
+          <label>Días</label>
+          <input type="number" id="vac-dias" readonly>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="solicitarVacaciones()">Solicitar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>// historial</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Empleado</th><th>Inicio</th><th>Fin</th><th>Días</th><th>Estado</th><th>Acc.</th></tr>
+          </thead>
+          <tbody id="bodyVacaciones">
+            <tr><td class="empty-row" colspan="6">No hay solicitudes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script src="codigo_malo.js"></script>
+</body>
+</html>
