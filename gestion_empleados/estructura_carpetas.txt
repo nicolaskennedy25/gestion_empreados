@@ -1,0 +1,98 @@
+=====================================================
+  SISTEMA DE GESTIÓN DE EMPLEADOS
+  Actividad 3 — Refactorización con Patrones
+  Arquitectura del Proyecto
+=====================================================
+
+gestion_empleados/
+│
+├── index.html                        ← Punto de entrada principal
+├── README.md                         ← Documentación del proyecto
+│
+├── css/
+│   └── estilos.css                   ← Estilos globales de la UI
+│
+├── js/
+│   └── script.js                     ← Orquesta los 6 patrones desde el cliente
+│                                        (EmpleadoManager, Factory, Strategy,
+│                                         Observer, Decorator, Adapter en JS)
+│
+├── paginas/                          ← Vistas HTML por módulo
+│   ├── empleados.html                ← Lista y tabla de empleados
+│   ├── registrar.html                ← Formulario de registro
+│   ├── reportes.html                 ← Reportes de nómina
+│   └── vacaciones.html               ← Gestión de vacaciones
+│
+├── api/                              ← Endpoints REST (PHP)
+│   ├── empleados.php                 ← CRUD de empleados
+│   ├── reportes.php                  ← Generación de reportes
+│   └── vacaciones.php                ← CRUD de vacaciones
+│
+├── conexion/
+│   └── conexion.php                  ← [SINGLETON] Conexión PDO única a MySQL
+│
+├── metodos/                          ← Implementación de los 6 patrones
+│   ├── EmpleadoManager.php           ← [SINGLETON]  Gestión centralizada
+│   ├── EmpleadoFactory.php           ← [FACTORY]    Crea TC / MT / Contratista
+│   ├── CalculoSalario.php            ← [STRATEGY]   Algoritmos de nómina
+│   ├── Notificador.php               ← [OBSERVER]   Eventos y notificaciones
+│   ├── BeneficioDecorator.php        ← [DECORATOR]  Beneficios opcionales
+│   └── NominaAdapter.php             ← [ADAPTER]    Integración sistema externo
+│
+└── sql/
+    └── gestion_empleados.sql         ← Schema: tablas empleados, vacaciones, log
+
+
+=====================================================
+  RESUMEN DE PATRONES POR ARCHIVO
+=====================================================
+
+  SINGLETON  →  conexion/conexion.php
+                metodos/EmpleadoManager.php
+                js/script.js (clase EmpleadoManager)
+
+  FACTORY    →  metodos/EmpleadoFactory.php
+                js/script.js (crearEmpleado)
+
+  STRATEGY   →  metodos/CalculoSalario.php
+                js/script.js (calcularSalario)
+
+  OBSERVER   →  metodos/Notificador.php
+                js/script.js (sistema de eventos)
+
+  DECORATOR  →  metodos/BeneficioDecorator.php
+                js/script.js (decorarEmpleado)
+
+  ADAPTER    →  metodos/NominaAdapter.php
+                js/script.js (adaptarNomina)
+
+=====================================================
+  FLUJO DE UNA PETICIÓN (ejemplo: registrar empleado)
+=====================================================
+
+  [registrar.html]
+       │
+       ▼
+  [js/script.js]  →  valida formulario
+       │
+       ▼
+  [api/empleados.php]  →  recibe JSON del cliente
+       │
+       ├── EmpleadoManager::getInstance()      [SINGLETON]
+       │
+       ├── EmpleadoFactory::crear(tipo, datos) [FACTORY]
+       │
+       ├── CalculoSalario::getEstrategia(tipo) [STRATEGY]
+       │         └── $estrategia->calcular(base)
+       │
+       ├── BeneficioDecorator (si aplica)      [DECORATOR]
+       │         └── apila bono / auxilio
+       │
+       ├── $manager->registrar($empleado)
+       │         └── conexion/conexion.php     [SINGLETON]
+       │
+       └── Notificador::notificar('registrado') [OBSERVER]
+                 ├── ObservadorLog → guarda en BD
+                 └── ObservadorUI  → actualiza tabla
+
+=====================================================

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Empleado — Gestión de Empleados</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">👥 Gestión de Empleados</div>
+    <ul class="nav-links">
+      <li><a href="../index.html">Inicio</a></li>
+      <li><a href="empleados.html">Empleados</a></li>
+      <li><a href="registrar.html" class="active">Registrar</a></li>
+      <li><a href="reportes.html">Reportes</a></li>
+      <li><a href="vacaciones.html">Vacaciones</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h2>➕ Registrar Nuevo Empleado</h2>
+    </div>
+
+    <div id="alerta" class="alerta hidden"></div>
+
+    <div class="card-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre *</label>
+          <input type="text" id="nombre" placeholder="Juan" required />
+        </div>
+        <div class="form-group">
+          <label>Apellido *</label>
+          <input type="text" id="apellido" placeholder="Pérez" required />
+        </div>
+        <div class="form-group">
+          <label>Cargo *</label>
+          <input type="text" id="cargo" placeholder="Desarrollador Backend" required />
+        </div>
+        <div class="form-group">
+          <label>Tipo de contrato *</label>
+          <select id="tipo">
+            <option value="tiempo_completo">Tiempo Completo</option>
+            <option value="medio_tiempo">Medio Tiempo</option>
+            <option value="contratista">Contratista</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Salario Base *</label>
+          <input type="number" id="salario_base" placeholder="3500000" min="0" step="1000" required />
+        </div>
+        <div class="form-group">
+          <label>Fecha de Ingreso *</label>
+          <input type="date" id="fecha_ingreso" required />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="correo@empresa.com" />
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="tel" id="telefono" placeholder="3001234567" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="registrar()">Registrar Empleado</button>
+        <a href="empleados.html" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/script.js"></script>
+  <script>
+    const API = '../api/empleados.php';
+
+    async function registrar() {
+      const campos = ['nombre','apellido','cargo','tipo','salario_base','fecha_ingreso'];
+      const datos  = {};
+      for (const c of campos) {
+        datos[c] = document.getElementById(c).value.trim();
+        if (!datos[c] && c !== 'tipo') {
+          mostrarAlerta(`El campo "${c}" es obligatorio.`, 'error'); return;
+        }
+      }
+      datos.email    = document.getElementById('email').value.trim();
+      datos.telefono = document.getElementById('telefono').value.trim();
+
+      try {
+        const res  = await fetch(API, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ accion: 'registrar', ...datos })
+        });
+        const data = await res.json();
+        mostrarAlerta(data.mensaje, data.exito ? 'success' : 'error');
+        if (data.exito) {
+          document.querySelectorAll('input, select').forEach(el => { if(el.tagName!=='SELECT') el.value=''; });
+        }
+      } catch(err) {
+        mostrarAlerta('Error de conexión: ' + err.message, 'error');
+      }
+    }
+
+    function mostrarAlerta(msg, tipo) {
+      const el = document.getElementById('alerta');
+      el.textContent = msg;
+      el.className = `alerta alerta-${tipo}`;
+    }
+  </script>
+</body>
+</html>

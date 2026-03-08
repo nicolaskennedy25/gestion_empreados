@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vacaciones — Gestión de Empleados</title>
+  <link rel="stylesheet" href="../css/estilos.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">👥 Gestión de Empleados</div>
+    <ul class="nav-links">
+      <li><a href="../index.html">Inicio</a></li>
+      <li><a href="empleados.html">Empleados</a></li>
+      <li><a href="registrar.html">Registrar</a></li>
+      <li><a href="reportes.html">Reportes</a></li>
+      <li><a href="vacaciones.html" class="active">Vacaciones</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <div class="page-header">
+      <h2>🏖️ Gestión de Vacaciones</h2>
+    </div>
+
+    <div id="alerta" class="alerta hidden"></div>
+
+    <div class="card-form">
+      <h3>Solicitar Vacaciones</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Empleado *</label>
+          <select id="selEmpleado"><option value="">Cargando...</option></select>
+        </div>
+        <div class="form-group">
+          <label>Fecha Inicio *</label>
+          <input type="date" id="fecha_inicio" />
+        </div>
+        <div class="form-group">
+          <label>Fecha Fin *</label>
+          <input type="date" id="fecha_fin" />
+        </div>
+        <div class="form-group">
+          <label>Días calculados</label>
+          <input type="number" id="dias" readonly />
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Observación</label>
+          <textarea id="observacion" rows="2" placeholder="Opcional..."></textarea>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="solicitarVacaciones()">Solicitar</button>
+      </div>
+    </div>
+
+    <div class="card-form">
+      <h3>Historial de Vacaciones</h3>
+      <div class="tabla-wrapper">
+        <table class="tabla">
+          <thead><tr><th>Empleado</th><th>Inicio</th><th>Fin</th><th>Días</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="bodyVacaciones">
+            <tr><td colspan="6" class="text-center">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/script.js"></script>
+  <script>
+    const API_EMP = '../api/empleados.php';
+    const API_VAC = '../api/vacaciones.php';
+
+    document.getElementById('fecha_inicio').addEventListener('change', calcularDias);
+    document.getElementById('fecha_fin').addEventListener('change', calcularDias);
+
+    function calcularDias() {
+      const ini = document.getElementById('fecha_inicio').value;
+      const fin = document.getElementById('fecha_fin').value;
+      if (ini && fin) {
+        const diff = (new Date(fin) - new Date(ini)) / 86400000;
+        document.getElementById('dias').value = diff > 0 ? diff : 0;
+      }
+    }
+
+    async function cargarEmpleados() {
+      const res  = await fetch(API_EMP + '?accion=listar');
+      const data = await res.json();
+      const sel  = document.getElementById('selEmpleado');
+      sel.innerHTML = '<option value="">— Seleccionar —</option>' +
+        data.map(e => `<option value="${e.id}">${e.nombre} ${e.apellido}</option>`).join('');
+    }
+
+    async function cargarVacaciones() {
+      try {
+        const res  = await fetch(API_VAC + '?accion=listar');
+        const data = await res.json();
+        const tbody = document.getElementById('bodyVacaciones');
+        if (!data.length) { tbody.innerHTML='<tr><td colspan="6" class="text-center">No hay solicitudes.</td></tr>'; return; }
+        tbody.innerHTML = data.map(v => `
+          <tr>
+            <td>${v.empleado}</td>
+            <td>${v.fecha_inicio}</td>
+            <td>${v.fecha_fin}</td>
+            <td>${v.dias}</td>
+            <td><span class="badge badge-${v.estado}">${v.estado}</span></td>
+            <td>
+              ${v.estado==='pendiente' ? `
+                <button class="btn btn-sm btn-success" onclick="aprobar(${v.id})">Aprobar</button>
+                <button class="btn btn-sm btn-danger" onclick="rechazar(${v.id})">Rechazar</button>
+              ` : '—'}
+            </td>
+          </tr>
+        `).join('');
+      } catch(err) { mostrarAlerta('Error: ' + err.message, 'error'); }
+    }
+
+    async function solicitarVacaciones() {
+      const empId = document.getElementById('selEmpleado').value;
+      const ini   = document.getElementById('fecha_inicio').value;
+      const fin   = document.getElementById('fecha_fin').value;
+      const dias  = parseInt(document.getElementById('dias').value);
+      const obs   = document.getElementById('observacion').value;
+      if (!empId || !ini || !fin || dias <= 0) { mostrarAlerta('Completa todos los campos.','error'); return; }
+      const res  = await fetch(API_VAC, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ accion:'solicitar', empleado_id:empId, fecha_inicio:ini, fecha_fin:fin, dias, observacion:obs })});
+      const data = await res.json();
+      mostrarAlerta(data.mensaje, data.exito ? 'success' : 'error');
+      if (data.exito) cargarVacaciones();
+    }
+
+    async function aprobar(id) {
+      const res  = await fetch(API_VAC, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ accion:'actualizar', id, estado:'aprobada' }) });
+      const data = await res.json();
+      mostrarAlerta(data.mensaje, data.exito ? 'success' : 'error');
+      if (data.exito) cargarVacaciones();
+    }
+
+    async function rechazar(id) {
+      const res  = await fetch(API_VAC, { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ accion:'actualizar', id, estado:'rechazada' }) });
+      const data = await res.json();
+      mostrarAlerta(data.mensaje, data.exito ? 'success' : 'error');
+      if (data.exito) cargarVacaciones();
+    }
+
+    function mostrarAlerta(msg, tipo) {
+      const el = document.getElementById('alerta');
+      el.textContent = msg;
+      el.className = `alerta alerta-${tipo}`;
+    }
+
+    cargarEmpleados();
+    cargarVacaciones();
+  </script>
+</body>
+</html>
